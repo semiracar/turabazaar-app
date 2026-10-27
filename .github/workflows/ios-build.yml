@@ -1,0 +1,35 @@
+name: iOS Build
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['app-ios/**', '.github/workflows/ios-build.yml']
+
+jobs:
+  build:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Xcode-Version anzeigen
+        run: xcodebuild -version
+
+      - name: xcodegen installieren
+        run: brew install xcodegen
+
+      - name: Xcode-Projekt generieren
+        working-directory: app-ios
+        run: xcodegen
+
+      - name: App bauen (Simulator)
+        working-directory: app-ios
+        run: |
+          xcodebuild -scheme Turabazaar \
+            -destination 'generic/platform=iOS Simulator' \
+            -configuration Release \
+            build
+
+      # Signierter Build + Upload folgt, sobald ASC-API-Key als Secrets hinterlegt ist
+      # (Secrets: ASC_API_KEY_ID, ASC_API_ISSUER_ID, ASC_API_KEY_P8,
+      #           BUILD_CERTIFICATE_P12, BUILD_CERTIFICATE_PASSWORD, BUILD_PROVISION_PROFILE)

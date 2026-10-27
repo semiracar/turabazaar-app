@@ -1,0 +1,71 @@
+name: Android Build
+
+on:
+  push:
+    branches: [main]
+    paths: ['app-android/**']
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: app-android
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: android-actions/setup-android@v3
+
+      # Keystore: aus Secret (Produktion) oder frisch erzeugen (interner Test)
+      - name: Keystore vorbereiten
+        env:
+          KS_B64: ${{ secrets.TURABAZAAR_KEYSTORE_B64 }}
+        run: |
+          mkdir -p keystore
+          if [ -n "$KS_B64" ]; then
+            echo "$KS_B64" | base64 -d > keystore/turabazaar.jks
+          else
+            keytool -genkeypair -v -keystore keystore/turabazaar.jks \
+              -alias turabazaar -keyalg RSA -keysize 2048 -validity 10950 \
+              -storepass turabazaar-dev -keypass turabazaar-dev \
+              -dname "CN=Semir Acar, O=Turabazaar, C=DE"
+            echo "HINWEIS: Upload-Key wurde neu erzeugt (nur fuer internen Test)." 
+            base64 -w0 keystore/turabazaar.jks > keystore/turabazaar.jks.b64
+          fi
+
+      - name: Gradle Cache
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Berechtigungen
+        run: chmod +x gradlew
+
+      - name: Release AAB bauen
+        run: ./gradlew bundleRelease --no-daemon
+
+      - name: Release APK bauen
+        run: ./gradlew assembleRelease --no-daemon
+
+      - name: AAB hochladen
+        uses: actions/upload-artifact@v4
+        with:
+          name: turabazaar-aab
+          path: app-android/app/build/outputs/bundle/release/app-release.aab
+
+      - name: APK hochladen
+        uses: actions/upload-artifact@v4
+        with:
+          name: turabazaar-apk
+          path: app-android/app/build/outputs/apk/release/app-release.apk
+
+      - name: Keystore als Artefakt (nur wenn neu erzeugt)
+        if: ${{ secrets.TURABAZAAR_KEYSTORE_B64 == '' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: upload-keystore
+          path: app-android/keystore/turabazaar.jks

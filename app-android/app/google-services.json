@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "637001709660",
+    "project_id": "turabazaar-204d8",
+    "storage_bucket": "turabazaar-204d8.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:637001709660:android:c0e2694b8f97b26b00ce99",
+        "android_client_info": {
+          "package_name": "com.turabazaar.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCzvGAaEiVLPWB2kcvviebChxI9Rj6lwFM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

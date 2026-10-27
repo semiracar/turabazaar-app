@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Turabazaar Markenfarben -->
+    <color name="tura_bg">#0F1626</color>
+    <color name="tura_gold">#C9A227</color>
+    <color name="tura_white">#FFFFFF</color>
+
+    <style name="Theme.Turabazaar" parent="Theme.Material3.Dark.NoActionBar">
+        <item name="colorPrimary">@color/tura_gold</item>
+        <item name="colorPrimaryVariant">@color/tura_gold</item>
+        <item name="colorOnPrimary">@color/tura_bg</item>
+        <item name="colorSecondary">@color/tura_gold</item>
+        <item name="android:statusBarColor">@color/tura_bg</item>
+        <item name="android:navigationBarColor">@color/tura_bg</item>
+        <item name="android:windowBackground">@color/tura_bg</item>
+    </style>
+</resources>
