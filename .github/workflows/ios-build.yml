@@ -90,7 +90,14 @@ jobs:
           name: Turabazaar-iOS
           path: app-ios/build/ipa/*.ipa
 
-      # Upload zu App Store Connect folgt, sobald das app-spezifische Passwort
-      # als Secret APPLE_APP_PASSWORD hinterlegt ist:
-      # xcrun altool --upload-app -f app-ios/build/ipa/Turabazaar.ipa \
-      #   -t ios -u ${{ secrets.APPLE_ID }} -p ${{ secrets.APPLE_APP_PASSWORD }}
+      - name: Zu App Store Connect hochladen
+        working-directory: app-ios
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
+        run: |
+          xcrun altool --upload-app \
+            -f build/ipa/Turabazaar.ipa \
+            -t ios \
+            -u "$APPLE_ID" \
+            -p "$APPLE_APP_PASSWORD"
