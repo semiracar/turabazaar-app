@@ -14,14 +14,12 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.ProgressBar
 import androidx.appcompat.app.AppCompatActivity
-import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.turabazaar.app.push.TurabazaarMessagingService
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var webView: WebView
     private lateinit var progress: ProgressBar
-    private lateinit var refresh: SwipeRefreshLayout
 
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -31,7 +29,6 @@ class MainActivity : AppCompatActivity() {
 
         webView = findViewById(R.id.webview)
         progress = findViewById(R.id.progress)
-        refresh = findViewById(R.id.refresh)
 
         val settings: WebSettings = webView.settings
         settings.javaScriptEnabled = true
@@ -39,7 +36,7 @@ class MainActivity : AppCompatActivity() {
         settings.databaseEnabled = true
         settings.mediaPlaybackRequiresUserGesture = false
         settings.cacheMode = WebSettings.LOAD_DEFAULT
-        settings.userAgentString = settings.userAgentString + " TurabazaarApp/1.0"
+        settings.userAgentString = settings.userAgentString + " TurabazaarApp/1.1"
 
         CookieManager.getInstance().setAcceptCookie(true)
         CookieManager.getInstance().setAcceptThirdPartyCookies(webView, true)
@@ -50,7 +47,6 @@ class MainActivity : AppCompatActivity() {
             }
             override fun onPageFinished(view: WebView?, url: String?) {
                 progress.visibility = View.GONE
-                refresh.isRefreshing = false
                 // Push-Token an die Webseite melden (wird beim Login vom Server gebraucht)
                 TurabazaarMessagingService.pushToken?.let { token ->
                     view?.evaluateJavascript(
@@ -60,8 +56,10 @@ class MainActivity : AppCompatActivity() {
             }
             override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
                 val url = request.url.toString()
+                val host = request.url.host ?: return false
                 return when {
-                    url.startsWith("https://turabazaar.com") || url.startsWith("http://turabazaar.com") -> false
+                    // ALLE Turabazaar-Subdomains (shop., studio., partner. …) bleiben in der App
+                    host == "turabazaar.com" || host.endsWith(".turabazaar.com") -> false
                     url.startsWith("mailto:") || url.startsWith("tel:") || url.startsWith("whatsapp:") -> {
                         startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url))); true
                     }
@@ -70,8 +68,6 @@ class MainActivity : AppCompatActivity() {
             }
         }
         webView.webChromeClient = WebChromeClient()
-
-        refresh.setOnRefreshListener { webView.reload() }
 
         handleIntent(intent)
     }
