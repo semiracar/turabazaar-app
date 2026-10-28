@@ -9,6 +9,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      KS_B64: ${{ secrets.TURABAZAAR_KEYSTORE_B64 }}
     defaults:
       run:
         working-directory: app-android
@@ -64,7 +66,7 @@ jobs:
           path: app-android/app/build/outputs/apk/release/app-release.apk
 
       - name: Keystore als Artefakt (nur wenn neu erzeugt)
-        if: ${{ secrets.TURABAZAAR_KEYSTORE_B64 == '' }}
+        if: env.KS_B64 == ''
         uses: actions/upload-artifact@v4
         with:
           name: upload-keystore
