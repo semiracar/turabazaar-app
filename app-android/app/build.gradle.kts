@@ -20,6 +20,7 @@ android {
         create("release") {
             val keystoreFile = System.getenv("TURABAZAAR_KEYSTORE_PATH") ?: "keystore/turabazaar.jks"
             storeFile = file(keystoreFile)
+            storeType = System.getenv("TURABAZAAR_KEYSTORE_TYPE") ?: "PKCS12"
             storePassword = System.getenv("TURABAZAAR_KEYSTORE_PASSWORD") ?: "turabazaar-dev"
             keyAlias = System.getenv("TURABAZAAR_KEY_ALIAS") ?: "turabazaar"
             keyPassword = System.getenv("TURABAZAAR_KEY_PASSWORD") ?: "turabazaar-dev"
