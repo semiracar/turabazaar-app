@@ -3,17 +3,21 @@ name: Android Build
 on:
   push:
     branches: [main]
-    paths: ['app-android/**']
+    paths: ['app-android/**', '.github/workflows/android-build.yml']
   workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    env:
-      KS_B64: ${{ secrets.TURABAZAAR_KEYSTORE_B64 }}
     defaults:
       run:
         working-directory: app-android
+    env:
+      TURABAZAAR_KEYSTORE_B64: ${{ secrets.TURABAZAAR_KEYSTORE_B64 }}
+      TURABAZAAR_KEYSTORE_PASSWORD: ${{ secrets.TURABAZAAR_KEYSTORE_PASSWORD }}
+      TURABAZAAR_KEY_ALIAS: ${{ secrets.TURABAZAAR_KEY_ALIAS }}
+      TURABAZAAR_KEY_PASSWORD: ${{ secrets.TURABAZAAR_KEY_PASSWORD }}
+      TURABAZAAR_KEYSTORE_PATH: keystore/turabazaar.p12
     steps:
       - uses: actions/checkout@v4
 
@@ -22,24 +26,14 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - uses: android-actions/setup-android@v3
+      - name: Android SDK Lizenzen akzeptieren
+        run: yes | sdkmanager --licenses >/dev/null 2>&1 || true
 
-      # Keystore: aus Secret (Produktion) oder frisch erzeugen (interner Test)
+      # Upload-Keystore (PKCS12) aus Secret dekodieren
       - name: Keystore vorbereiten
-        env:
-          KS_B64: ${{ secrets.TURABAZAAR_KEYSTORE_B64 }}
         run: |
           mkdir -p keystore
-          if [ -n "$KS_B64" ]; then
-            echo "$KS_B64" | base64 -d > keystore/turabazaar.jks
-          else
-            keytool -genkeypair -v -keystore keystore/turabazaar.jks \
-              -alias turabazaar -keyalg RSA -keysize 2048 -validity 10950 \
-              -storepass turabazaar-dev -keypass turabazaar-dev \
-              -dname "CN=Semir Acar, O=Turabazaar, C=DE"
-            echo "HINWEIS: Upload-Key wurde neu erzeugt (nur fuer internen Test)." 
-            base64 -w0 keystore/turabazaar.jks > keystore/turabazaar.jks.b64
-          fi
+          echo "$TURABAZAAR_KEYSTORE_B64" | base64 -d > keystore/turabazaar.p12
 
       - name: Gradle Cache
         uses: gradle/actions/setup-gradle@v4
@@ -64,10 +58,3 @@ jobs:
         with:
           name: turabazaar-apk
           path: app-android/app/build/outputs/apk/release/app-release.apk
-
-      - name: Keystore als Artefakt (nur wenn neu erzeugt)
-        if: env.KS_B64 == ''
-        uses: actions/upload-artifact@v4
-        with:
-          name: upload-keystore
-          path: app-android/keystore/turabazaar.jks
