@@ -17,7 +17,7 @@ jobs:
       TURABAZAAR_KEYSTORE_PASSWORD: ${{ secrets.TURABAZAAR_KEYSTORE_PASSWORD }}
       TURABAZAAR_KEY_ALIAS: ${{ secrets.TURABAZAAR_KEY_ALIAS }}
       TURABAZAAR_KEY_PASSWORD: ${{ secrets.TURABAZAAR_KEY_PASSWORD }}
-      TURABAZAAR_KEYSTORE_PATH: keystore/turabazaar.p12
+      TURABAZAAR_KEYSTORE_PATH: ../keystore/turabazaar.p12
     steps:
       - uses: actions/checkout@v4
 
