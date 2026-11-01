@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Turabazaar Sale Studio</string>
+    <string name="web_url">https://turabazaar.com/verkaeufer/</string>
+    <string name="share_text">Schau dir das an: %1$s</string>
+</resources>

@@ -1,0 +1,60 @@
+name: Seller Studio Build
+
+on:
+  push:
+    branches: [main]
+    paths: ['app-seller/**', '.github/workflows/seller-build.yml']
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: app-seller
+    env:
+      TURABAZAAR_KEYSTORE_B64: ${{ secrets.TURABAZAAR_KEYSTORE_B64 }}
+      TURABAZAAR_KEYSTORE_PASSWORD: ${{ secrets.TURABAZAAR_KEYSTORE_PASSWORD }}
+      TURABAZAAR_KEY_ALIAS: ${{ secrets.TURABAZAAR_KEY_ALIAS }}
+      TURABAZAAR_KEY_PASSWORD: ${{ secrets.TURABAZAAR_KEY_PASSWORD }}
+      TURABAZAAR_KEYSTORE_PATH: ../keystore/turabazaar.p12
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Android SDK Lizenzen akzeptieren
+        run: yes | sdkmanager --licenses >/dev/null 2>&1 || true
+
+      # Upload-Keystore (PKCS12) aus Secret dekodieren – derselbe Key wie die Shop-App
+      - name: Keystore vorbereiten
+        run: |
+          mkdir -p keystore
+          echo "$TURABAZAAR_KEYSTORE_B64" | base64 -d > keystore/turabazaar.p12
+
+      - name: Gradle Cache
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Berechtigungen
+        run: chmod +x gradlew
+
+      - name: Release AAB bauen
+        run: ./gradlew bundleRelease --no-daemon
+
+      - name: Release APK bauen
+        run: ./gradlew assembleRelease --no-daemon
+
+      - name: AAB hochladen
+        uses: actions/upload-artifact@v4
+        with:
+          name: salestudio-aab
+          path: app-seller/app/build/outputs/bundle/release/app-release.aab
+
+      - name: APK hochladen
+        uses: actions/upload-artifact@v4
+        with:
+          name: salestudio-apk
+          path: app-seller/app/build/outputs/apk/release/app-release.apk
