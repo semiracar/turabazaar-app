@@ -9,6 +9,8 @@ on:
 jobs:
   build:
     runs-on: macos-26
+    env:
+      HAS_PROFILE: ${{ secrets.SELLER_PROVISION_PROFILE_BASE64 != '' }}
     steps:
       - uses: actions/checkout@v4
 
@@ -22,7 +24,7 @@ jobs:
       # Variante A: Signierter App-Store-Build (Secrets vorhanden)
       - name: Signierte App archivieren
         working-directory: app-seller-ios
-        if: ${{ secrets.SELLER_PROVISION_PROFILE_BASE64 != '' }}
+        if: ${{ env.HAS_PROFILE == 'true' }}
         env:
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
           P12_BASE64: ${{ secrets.BUILD_CERTIFICATE_BASE64 }}
@@ -48,21 +50,6 @@ jobs:
             CODE_SIGN_IDENTITY="iPhone Distribution" \
             PROVISIONING_PROFILE_SPECIFIER="Turabazaar Sale Studio App Store" \
             archive
-          cat > exportOptions.plist <<'EOF'
-          <?xml version="1.0" encoding="UTF-8"?>
-          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-          <plist version="1.0">
-          <dict>
-            <key>method</key><string>app-store</string>
-            <key>teamID</key><string>W6Q8QMSJH5</string>
-            <key>signingStyle</key><string>manual</string>
-            <key>provisioningProfiles</key>
-            <dict>
-              <key>com.turabazaar.seller</key><string>Turabazaar Sale Studio App Store</string>
-            </dict>
-          </dict>
-          </plist>
-          EOF
           xcodebuild -exportArchive \
             -archivePath build/SaleStudio.xcarchive \
             -exportPath build/ipa \
@@ -70,7 +57,7 @@ jobs:
 
       - name: IPA zu App Store Connect hochladen
         working-directory: app-seller-ios
-        if: ${{ secrets.SELLER_PROVISION_PROFILE_BASE64 != '' }}
+        if: ${{ env.HAS_PROFILE == 'true' }}
         env:
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_APP_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
@@ -82,7 +69,7 @@ jobs:
             -p "$APPLE_APP_PASSWORD"
 
       - name: IPA als Artefakt speichern
-        if: ${{ secrets.SELLER_PROVISION_PROFILE_BASE64 != '' }}
+        if: ${{ env.HAS_PROFILE == 'true' }}
         uses: actions/upload-artifact@v4
         with:
           name: SaleStudio-iOS
@@ -91,7 +78,7 @@ jobs:
       # Variante B: Unsigneder Build (Fallback, ohne Store-Signierung)
       - name: Unsigned bauen (kein Signing nötig)
         working-directory: app-seller-ios
-        if: ${{ secrets.SELLER_PROVISION_PROFILE_BASE64 == '' }}
+        if: ${{ env.HAS_PROFILE == 'false' }}
         run: |
           xcodebuild -scheme TurabazaarSaleStudio \
             -destination 'generic/platform=iOS Simulator' \
@@ -103,7 +90,7 @@ jobs:
           zip -r "$OLDPWD/SaleStudio-unsigned.zip" TurabazaarSaleStudio.app
 
       - name: Unsigned-Build als Artefakt
-        if: ${{ secrets.SELLER_PROVISION_PROFILE_BASE64 == '' }}
+        if: ${{ env.HAS_PROFILE == 'false' }}
         uses: actions/upload-artifact@v4
         with:
           name: SaleStudio-iOS-unsigned
