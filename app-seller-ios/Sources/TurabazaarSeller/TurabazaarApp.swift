@@ -10,7 +10,7 @@ struct TurabazaarSaleStudioApp: App {
 }
 
 struct ContentView: View {
-    let startURL = URL(string: "https://turabazaar.com/verkaeufer/")!
+    let startURL = URL(string: "https://seller.turabazaar.com/")!
 
     var body: some View {
         WebView(url: startURL)
